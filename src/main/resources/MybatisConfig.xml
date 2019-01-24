@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- 读取properties 配置文件 -->
+	<properties resource="properties/db.properties"></properties>
+	
+	<settings>
+		<!-- 二级缓存总开关，映射文件需要添加<cache/>手动开启二级缓存，
+			开启二级缓存的映射文件包含的实体需要序列化
+		 -->
+		<setting name="cacheEnabled" value="true"/>
+		
+		<!-- 延迟加载总开发 -->
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<!-- 侵入式延迟加载开关，true：侵入式延迟加载；false：深度延迟加载 -->
+		<setting name="aggressiveLazyLoading" value="false"/>
+		<!-- 开启全局驼峰命名(不然数据库列名和实体属性对应不上，也可以通过映射文件定义resultMap进行映射) -->
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+	
+	<!-- 配置实体类别名 -->
+	<typeAliases>
+		<package name="cn.lt.mybatis.model"/>
+	</typeAliases>
+	
+	<!-- 插件配置 -->
+	<plugins>
+		<plugin interceptor="com.github.pagehelper.PageInterceptor">
+			<property name="helperDialect" value="mysql"/>
+		</plugin>
+	</plugins>
+	
+	<!-- 配置数据源 -->
+	<environments default="development">
+		<environment id="development">
+			<!-- 事务管理：采用的是JDBC的事务管理 -->
+			<transactionManager type="JDBC" />
+			<!-- 配置数据源连接池： POOLED使用的是Mybatis自己的连接池 -->
+			<dataSource type="POOLED">
+				<property name="driver" value="${db.driver}" />
+				<property name="url" value="${db.url}" />
+				<property name="username" value="${db.username}" />
+				<property name="password" value="${db.password}" />
+			</dataSource>
+		</environment>
+	</environments>
+
+	<!-- 读取mapper映射文件 -->
+	<mappers>
+		<!-- xml路径 -->
+		<!-- <mapper resource="cn/lt/dao/mapper/UserMapper.xml"/> -->
+		<!-- mapper接口类路径加载映射文件（mapper接口名称和mapper映射文件名称同名且在同一个目录下） -->
+		<!-- <mapper class="cn.lt.dao.mapper.UserMapper"/> -->
+		<!-- 指定mapper接口所在的包来加载映射文件 -->
+		<package name="cn.lt.mybatis.mapper"/>
+	</mappers>
+	
+</configuration>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.lt.mybatis.mapper.UserMapper">
+	<!-- 开启二级缓存，实体需要序列化 -->
+	<!-- <cache></cache> -->
+	
+	<!-- 根据主键查询用户 -->
+	<select id="queryUserById" parameterType="Integer" resultType="User">
+		select * from user where id = #{id}
+	</select>
+	
+	<!-- 主键返回(主键自增) -->
+	<insert id="insertUser" parameterType="User">
+		<selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="Integer">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into user(name,age) values(#{name}, #{age})
+	</insert>
+	
+	<!-- 主键返回(手动生成) -->
+	<insert id="insertUser1" parameterType="User1">
+		<selectKey keyColumn="id" keyProperty="id" order="BEFORE" resultType="String">
+			select uuid()
+		</selectKey>
+		insert into user1(id,name,age) values(#{id},#{name}, #{age})
+	</insert>
+	
+	<!-- 延迟加载，一对一关联映射 -->
+	<resultMap type="OrderExt" id="orderAndUser">
+		<id column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="note" property="note" />
+		<!-- 一对一关联映射 -->
+		<!-- property:Orders对象的user属性   javaType：user属性对应 的类型 -->
+		<!-- select 属性：加载完主信息之后，会根据延迟加载策略，去调用select属性指定的statementID -->
+		<!-- column属性：表示将主查询结果集中指定列的结果取出来，作为参数，传递给select属性的statement中 -->
+		<association property="user" javaType="User" column="user_id" select="queryUserById"></association>
+	</resultMap>
+	
+	<select id="queryOrder" resultMap="orderAndUser">
+		select * from orders 
+	</select>
+	
+	<!-- 延迟加载，一对多关联映射 -->
+	<resultMap type="UserExt" id="userAndOrder">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="age" property="age" />
+		<!-- 一对多关联映射 -->
+		<!-- property:User对象的orders属性   ofType：orders属性对应 的类型 -->
+		<!-- select 属性：加载完主信息之后，会根据延迟加载策略，去调用select属性指定的statementID -->
+		<!-- column属性：表示将主查询结果集中指定列的结果取出来，作为参数，传递给select属性的statement中 -->
+		<collection property="orders" ofType="Order" column="id" select="queryOrderByUserId"></collection>
+	</resultMap>
+	
+	<select id="queryUser" resultMap="userAndOrder">
+		select * from user 
+	</select>
+	
+	<select id="queryOrderByUserId" parameterType="Integer" resultType="Order">
+		select * from orders where user_id = #{id}
+	</select>
+	
+	<!-- 一对一关联查询 -->
+	<select id="one2One" resultMap="one2OneResultMap">
+		select o.*,u.name,u.age
+		from orders o 
+		left join user u on u.id = o.user_id
+	</select>
+	
+	<resultMap type="OrderExt" id="one2OneResultMap">
+		<id column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="note" property="note" />
+		<association property="user" javaType="User">
+			<id column="user_id" property="id"/>
+			<result column="name" property="name"/>
+			<result column="age" property="age"/>
+		</association>
+	</resultMap>
+	
+	<select id="one2One1" resultType="OrderExt1"><!-- 也可以用Map集合，不用定义查询结果实体 -->
+		select o.*,u.name,u.age
+		from orders o 
+		left join user u on u.id = o.user_id
+	</select>
+	
+	<!-- 一对多关联查询 -->
+	<select id="one2Many" resultMap="one2ManyResultMap">
+		select u.*,o.number,o.note,o.id as oid 
+		from user u
+		left join orders o on o.user_id = u.id
+	</select>
+	
+	<resultMap type="UserExt" id="one2ManyResultMap">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="age" property="age" />
+		<collection property="orders" ofType="Order">
+			<id column="oid" property="id" />
+			<result column="id" property="userId" />
+			<result column="number" property="number" />
+			<result column="note" property="note" />
+		</collection>
+	</resultMap>
+	
+</mapper>
